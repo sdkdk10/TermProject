@@ -90,14 +90,51 @@ def subwaySearch(Code, Day, Inout):
         LEFTTIME = item.find("LEFTTIME")                 #출발시간
             
         print(str(FR_CODE.text) + "\t" + str(STATION_CD.text)+  "\t" + str(STATION_NM.text) + "\t" + str(SUBWAYENAME.text) + "\t" + str(LEFTTIME.text))
+#-------------------------------------------------------------------------------------------
+#---------------------------------------버스 검색---------------------------------------
+def BusSearch(BuscityCode, NodeId):
+#http://openapi.tago.go.kr/openapi/service/서비스명(영문)/오퍼레이션명(영문)
+#?ServiceKey=서비스키&요청메세지(영문)=숫자또는코드
+
+    key = "GL4c4I7sLqwYTOuzI0s9u4Y4IIL4PBJLeyfm%2Bc3lbr0VCuwRSu7TDPP%2FfG45mp%2Bbqia1uiMMhUxzlfnNP2A0bQ%3D%3D"
+    url = "http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList?ServiceKey=" + key + "&cityCode=" + BuscityCode + "&nodeId=" + NodeId
     
+    data = urllib.request.urlopen(url).read()
+
+    filename = "Bus.xml"
+    f = open(filename, "wb")
+    f.write(data)
+    f.close()
+    
+    #파싱하기
+    tree = etree.parse(filename)    
+    itemElements = tree.getiterator("item")
+    print("========버스==========")
+    for item in itemElements:
+        #if(item.find("infoType")).text == "1":
+        arrprevstationcnt = item.find("arrprevstationcnt")  #도착예정버스 남은 정류장 수
+        arrtime = item.find("arrtime") #도착예정버스 도착 예상시간 
+        nodeid = item.find("nodeid")    #정류소ID
+        nodenm = item.find("nodenm")    #정류소명
+        routeid = item.find("routeid")  #노선ID
+        routeno = item.find("routeno")  #노선번호
+        routetp = item.find("routetp")  #노선유형
+        
+        #vehicletp = item.find("vehicletp")  #도착예정버스 차량 유형
+               
+       # print(str(nodeid.text) + "\t" + str(nodenm.text)+  "\t" + str(routeid.text) + "\t" + str(routeno.text) + "\t" + str(routetp.text)+ str(arrprevstationcnt.text)+ str(vehicletp.text)+ str(arrTime.text))
+        print(str(arrprevstationcnt.text) + "\t" + str(arrtime.text) + "\t" + str(nodeid.text) + "\t" + str(nodenm.text) + "\t" + str(routeid.text) + "\t" + str(routeno.text) + "\t" +  str(routetp.text) )
+
+#-------------------------------------------------------------------------------------------
 #--------------------------------------매뉴----------------------------------------------
 def printMenu():
+    print("\t")
     print("막차시간정보")
     print("========Menu==========")    
     print("도시코드:  l")
     print("지하철 호선별 막차: s")
     print("지하철역막차검색: g")
+    print("버스: b")
     print("========Menu==========")
     
 #---------------------------------메뉴실행---------------------------------------------------------
@@ -149,6 +186,10 @@ def launcherFunction(menu):
         Day = input("요일(평:1, 토: 2, 일/공: 3): ")
         Inout = input("상(1)/하(2))행선: ")
         subwaySearch(Code, Day, Inout)
+    elif menu == 'b':
+        BuscityCode = input("도시코드: ")
+        NodeId = input("정류소: ")
+        BusSearch(BuscityCode, NodeId)
     else:
         print ("error : unknow menu key")
 
