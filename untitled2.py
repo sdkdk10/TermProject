@@ -1,3 +1,5 @@
+
+
 import urllib.request
 import xml.etree.ElementTree as etree
 
@@ -91,6 +93,31 @@ def subwaySearch(Code, Day, Inout):
             
         print(str(FR_CODE.text) + "\t" + str(STATION_CD.text)+  "\t" + str(STATION_NM.text) + "\t" + str(SUBWAYENAME.text) + "\t" + str(LEFTTIME.text))
 #-------------------------------------------------------------------------------------------
+#-----------------------------------역 검색해서 찾기----------------------------------------
+def subwayMakeaSearch(StationName):
+    print(StationName)
+    key = "GH9cfIKgPs69CGQioE5A2dYp9V1P8OCywu%2BnaanIOWiTue3FlroqDCEuWo4k8ekz%2F91Wlhpx%2Bwl6kfHWTG0EAg%3D%3D"
+    url = "http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getKwrdFndSubwaySttnList?ServiceKey=" + key + "&subwayStationName=" + StationName
+    
+    data = urllib.request.urlopen(url).read()
+
+    filename = "subwayMakeaSearch.xml"
+    f = open(filename, "wb") 
+    f.write(data)
+    f.close()
+    
+    #파싱하기
+    tree = etree.parse(filename)    
+    itemElements = tree.getiterator("item")
+    print("역코드\t역이름")
+    for item in itemElements:
+        print("in")
+        #if(item.find("infoType")).text == "1":
+        subwaystationid = item.find("subwaystationid")                 #역코드
+        subwaystationname = item.find("subwaystationname")             #역이름
+            
+        print(str(subwaystationid.text) + "\t" + str(subwaystationname.text) )
+        
 #---------------------------------------버스 검색---------------------------------------
 def BusSearch(BuscityCode, NodeId):
 #http://openapi.tago.go.kr/openapi/service/서비스명(영문)/오퍼레이션명(영문)
@@ -126,12 +153,14 @@ def BusSearch(BuscityCode, NodeId):
         print(str(arrprevstationcnt.text) + "\t" + str(arrtime.text) + "\t" + str(nodeid.text) + "\t" + str(nodenm.text) + "\t" + str(routeid.text) + "\t" + str(routeno.text) + "\t" +  str(routetp.text) )
 
 #-------------------------------------------------------------------------------------------
+
 #--------------------------------------매뉴----------------------------------------------
 def printMenu():
     print("\t")
     print("막차시간정보")
     print("========Menu==========")    
     print("도시코드:  l")
+    print("역 키워드검색: k")
     print("지하철 호선별 막차: s")
     print("지하철역막차검색: g")
     print("버스: b")
@@ -142,6 +171,13 @@ def launcherFunction(menu):
     #도시코드
     if menu ==  'l':
         cityCode()
+    #역 키워드검색
+    elif menu == 'k':
+        StationName = input("키워드 입력: ")
+        print(StationName)
+        StationName = StationName.encode('utf-8')
+        
+        subwayMakeaSearch(str(StationName))
     #호선별 막차
     elif menu == 's':
         Line = input("호선(1~9호선: 1~9, 인천 1호선: I, 경의중앙선: K, 분당선: B, 공항철도: A, 경춘선: G, 신분당선: S, 수인선: SU): ")
