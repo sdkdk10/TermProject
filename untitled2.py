@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+# -*- coding: cp949 -*-
 import urllib.request
 import xml.etree.ElementTree as etree
 
@@ -67,7 +67,7 @@ def subway(End, Line, Day, Inout):
         + "\t" + str(FIRST_TIME.text) + "\t" + str(F_SUBWAYSNAME.text) + "\t" + str(LAST_TIME.text)  
         + "\t" + str(L_SUBWAYSNAME.text) + "\t" + str(L_SUBWAYENAME.text))
     
-#---------------------------------지하철역검색----------------------------------------------------------------
+#---------------------------------지하철역막차검색----------------------------------------------------------------
 def subwaySearch(Code, Day, Inout):
     key = "4357414e6f73646b3132397643534a4b"
     url = "http://openAPI.seoul.go.kr:8088/" + key + "/xml/SearchLastTrainTimeByIDService/1/10/" + Code + "/" + Day +"/" + Inout + "/"
@@ -98,9 +98,11 @@ def Change(Name):
     Name = Name.replace("b", "", 1)
     Name = Name.replace("'", "")
     Name = Name.replace("\\x", "%")
+    
     subwayMakeaSearch(Name)
 #-----------------------------------역 검색해서 찾기----------------------------------------
 def subwayMakeaSearch(StationName):
+    print(StationName)
     key = "GH9cfIKgPs69CGQioE5A2dYp9V1P8OCywu%2BnaanIOWiTue3FlroqDCEuWo4k8ekz%2F91Wlhpx%2Bwl6kfHWTG0EAg%3D%3D"
     url = "http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getKwrdFndSubwaySttnList?ServiceKey=" + key + "&subwayStationName=" + StationName
     
@@ -122,11 +124,50 @@ def subwayMakeaSearch(StationName):
             
         print(str(subwaystationid.text) + "\t" + str(subwaystationname.text) )
         
+    print("막차검색:  l")
+    print("전체시간표검색: f")
+    subwayKey = str(input ('select menu :'))
+    subwayMenuFun(subwayKey)
+#---------------------------------역 검색 후 메뉴기능-------------------------------------
+def subwayMenuFun(menu):
+    if menu == 'l':
+        Code = input("검색할 역코드를 입력하세요(SES제외): ")
+        Day = input("요일(평:1, 토: 2, 일/공: 3): ")
+        Inout = input("상(1)/하(2))행선: ")
+        subwaySearch(Code, Day, Inout)
+    elif menu == 'f':
+        Code = input("검색할 역코드를 입력하세요: ")
+        Day = input("요일(평:1, 토: 2, 일/공: 3): ")
+        Inout = input("상(U)/하(D))행선: ")
+        subwayFull(Code, Day, Inout)
+
+    
+#------------------------------------역 검색 후 전체시간표--------------------------------
+def subwayFull(Code, Day, InOut):
+    key = "GH9cfIKgPs69CGQioE5A2dYp9V1P8OCywu%2BnaanIOWiTue3FlroqDCEuWo4k8ekz%2F91Wlhpx%2Bwl6kfHWTG0EAg%3D%3D"
+    url = "http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getSubwaySttnAcctoSchdulList?ServiceKey=" + key + "&subwayStationId=" + Code + "&dailyTypeCode=0" + Day + "&upDownTypeCode=" + InOut + "&numOfRows=999&pageSize=999&pageNo=1&startPage=1"
+    
+    data = urllib.request.urlopen(url).read()
+
+    filename = "subwayFull.xml"
+    f = open(filename, "wb") 
+    f.write(data)
+    f.close()
+    
+    #파싱하기
+    tree = etree.parse(filename)    
+    itemElements = tree.getiterator("item")
+    print("도착시간\t종점역이름")
+    for item in itemElements:
+        arrtime = item.find("arrtime")                   #도착시간
+        endsubwaystationnm = item.find("endsubwaystationnm")             #종점역이름
+            
+        print(str(arrtime.text) + "\t" + str(endsubwaystationnm.text))
 #---------------------------------------버스 검색---------------------------------------
 def BusSearch(BuscityCode, NodeId):
 #http://openapi.tago.go.kr/openapi/service/서비스명(영문)/오퍼레이션명(영문)
 #?ServiceKey=서비스키&요청메세지(영문)=숫자또는코드
-
+    
     key = "GL4c4I7sLqwYTOuzI0s9u4Y4IIL4PBJLeyfm%2Bc3lbr0VCuwRSu7TDPP%2FfG45mp%2Bbqia1uiMMhUxzlfnNP2A0bQ%3D%3D"
     url = "http://openapi.tago.go.kr/openapi/service/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList?ServiceKey=" + key + "&cityCode=" + BuscityCode + "&nodeId=" + NodeId
     
@@ -179,6 +220,7 @@ def launcherFunction(menu):
     elif menu == 'k':
         StationName = input("키워드 입력: ")
         StationName = StationName.encode('utf-8')
+        print(StationName)
         Change(str(StationName))
     #호선별 막차
     elif menu == 's':
