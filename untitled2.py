@@ -126,12 +126,13 @@ def subwayMakeaSearch(StationName):
         
     print("막차검색:  l")
     print("전체시간표검색: f")
+    print("출구별 역주변 시설보기: a")
     subwayKey = str(input ('select menu :'))
     subwayMenuFun(subwayKey)
 #---------------------------------역 검색 후 메뉴기능-------------------------------------
 def subwayMenuFun(menu):
     if menu == 'l':
-        Code = input("검색할 역코드를 입력하세요(SES제외): ")
+        Code = input("검색할 역코드를 입력하세요: ")
         Day = input("요일(평:1, 토: 2, 일/공: 3): ")
         Inout = input("상(1)/하(2))행선: ")
         subwaySearch(Code, Day, Inout)
@@ -140,7 +141,9 @@ def subwayMenuFun(menu):
         Day = input("요일(평:1, 토: 2, 일/공: 3): ")
         Inout = input("상(U)/하(D))행선: ")
         subwayFull(Code, Day, Inout)
-
+    elif menu == 'a':
+        Code = input("검색할 역코드를 입력하세요: ")
+        subwayAround(Code)
     
 #------------------------------------역 검색 후 전체시간표--------------------------------
 def subwayFull(Code, Day, InOut):
@@ -163,7 +166,31 @@ def subwayFull(Code, Day, InOut):
         endsubwaystationnm = item.find("endsubwaystationnm")             #종점역이름
             
         print(str(arrtime.text) + "\t" + str(endsubwaystationnm.text))
-#---------------------------------------버스 검색---------------------------------------
+
+        
+#---------------------------------------역 출구별 건물--------------------------------------
+def subwayAround(Code):
+    key = "GH9cfIKgPs69CGQioE5A2dYp9V1P8OCywu%2BnaanIOWiTue3FlroqDCEuWo4k8ekz%2F91Wlhpx%2Bwl6kfHWTG0EAg%3D%3D"
+    url = "http://openapi.tago.go.kr/openapi/service/SubwayInfoService/getSubwaySttnExitAcctoCfrFcltyList?ServiceKey=" + key + "&subwayStationId=" + Code + "&numOfRows=999&pageSize=999&pageNo=1&startPage=1"
+    
+    data = urllib.request.urlopen(url).read()
+
+    filename = "subwayAround.xml"
+    f = open(filename, "wb") 
+    f.write(data)
+    f.close()
+    
+    #파싱하기
+    tree = etree.parse(filename)    
+    itemElements = tree.getiterator("item")
+    print("출구번호\t주변시설")
+    for item in itemElements:
+        exitno = item.find("exitno")               #출구번호
+        dirdesc = item.find("dirdesc")             #주변건물
+            
+        print(str(exitno.text) + "\t" + str(dirdesc.text))
+
+#---------------------------------------버스 검색---------------------------------------    
 def BusSearch(BuscityCode, NodeId):
 #http://openapi.tago.go.kr/openapi/service/서비스명(영문)/오퍼레이션명(영문)
 #?ServiceKey=서비스키&요청메세지(영문)=숫자또는코드
@@ -192,9 +219,6 @@ def BusSearch(BuscityCode, NodeId):
         routeno = item.find("routeno")  #노선번호
         routetp = item.find("routetp")  #노선유형
         
-        #vehicletp = item.find("vehicletp")  #도착예정버스 차량 유형
-               
-       # print(str(nodeid.text) + "\t" + str(nodenm.text)+  "\t" + str(routeid.text) + "\t" + str(routeno.text) + "\t" + str(routetp.text)+ str(arrprevstationcnt.text)+ str(vehicletp.text)+ str(arrTime.text))
         print(str(arrprevstationcnt.text) + "\t" + str(arrtime.text) + "\t" + str(nodeid.text) + "\t" + str(nodenm.text) + "\t" + str(routeid.text) + "\t" + str(routeno.text) + "\t" +  str(routetp.text) )
 
 #-------------------------------------------------------------------------------------------
